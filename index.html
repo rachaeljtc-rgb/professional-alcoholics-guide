@@ -295,35 +295,43 @@ nav{
 .no-results.show{display:block}
 
 /* ══ GLOBE PAGE ══ */
-.globe-wrap{
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-  padding:2.5rem 2rem 3rem;min-height:calc(100vh - 58px);background:var(--bg);
-  overflow:hidden;
+.globe-page-wrap{
+  display:flex;flex-direction:column;align-items:center;
+  padding:2rem 0 1.5rem;min-height:calc(100vh - 58px);background:var(--bg);
 }
-.globe-header{text-align:center;margin-bottom:2rem}
+.globe-header{text-align:center;margin-bottom:1.25rem}
 .globe-header h2{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:400;color:var(--navy)}
 .globe-header h2 em{font-style:italic}
 .globe-header p{font-family:'EB Garamond',serif;font-style:italic;font-size:0.95rem;color:var(--ink-light);margin-top:0.3rem}
-#globe-svg{cursor:grab;display:block}
-#globe-svg:active{cursor:grabbing}
+#world-map{
+  width:100%;height:calc(100vh - 200px);min-height:520px;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
 .globe-legend{
-  display:flex;gap:2rem;margin-top:1.5rem;
+  display:flex;gap:2rem;margin-top:1.25rem;
   font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-light);
 }
 .globe-legend span{display:flex;align-items:center;gap:0.5rem}
 .dot-solid{width:10px;height:10px;border-radius:50%;background:var(--navy);flex-shrink:0}
 .dot-open{width:10px;height:10px;border-radius:50%;border:2px solid var(--blue-mid);background:#fff;flex-shrink:0}
-.globe-tooltip{
-  position:fixed;pointer-events:none;z-index:9999;
-  background:var(--surface);border:1px solid var(--border-strong);
-  border-radius:8px;padding:0.75rem 1rem;box-shadow:var(--shadow-md);
-  max-width:220px;display:none;
+/* Leaflet popup overrides */
+.map-popup .leaflet-popup-content-wrapper{
+  background:var(--surface)!important;border:1px solid var(--border-strong)!important;
+  border-radius:10px!important;box-shadow:0 4px 24px rgba(6,15,36,0.14)!important;
+  padding:0!important;
 }
-.globe-tooltip.show{display:block}
-.gt-name{font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy)}
-.gt-city{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-light);margin:0.15rem 0}
-.gt-vibe{font-family:'EB Garamond',serif;font-style:italic;font-size:0.82rem;color:var(--ink-mid);line-height:1.5}
-.gt-sticker{display:inline-flex;align-items:center;gap:0.25rem;background:var(--navy);color:#fff;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.18rem 0.5rem;border-radius:20px;margin-top:0.4rem;font-weight:500}
+.map-popup .leaflet-popup-content{margin:1rem 1.1rem!important;min-width:180px}
+.map-popup .leaflet-popup-tip{background:var(--surface)!important}
+.mp-name{font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy);margin-bottom:0.15rem}
+.mp-city{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:0.4rem}
+.mp-vibe{font-family:'EB Garamond',serif;font-style:italic;font-size:0.82rem;color:var(--ink-mid);line-height:1.5;margin-bottom:0.65rem}
+.mp-btn{
+  font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
+  background:var(--navy);color:#fff;border:none;cursor:pointer;
+  padding:0.4rem 0.85rem;border-radius:4px;font-family:'DM Sans',sans-serif;
+  transition:background 0.2s;
+}
+.mp-btn:hover{background:var(--royal)}
 
 /* ══ DRINKS PAGE — recipe cards ══ */
 .drinks-page{padding:3rem 3rem 5rem;max-width:1200px;margin:0 auto}
@@ -591,22 +599,16 @@ nav{
 
 <!-- ══════════ GLOBE ══════════ -->
 <div class="page" id="page-globe">
-  <div class="globe-wrap">
+  <div class="globe-page-wrap">
     <div class="globe-header">
       <h2>The <em>World</em></h2>
-      <p>drag to rotate · scroll to zoom · click a pin to explore</p>
+      <p>scroll to zoom · drag to pan · click a pin to explore</p>
     </div>
-    <svg id="globe-svg"></svg>
+    <div id="world-map"></div>
     <div class="globe-legend">
       <span><div class="dot-solid"></div>Been there</span>
       <span><div class="dot-open"></div>Want to go</span>
     </div>
-  </div>
-  <div class="globe-tooltip" id="globe-tt">
-    <div class="gt-name" id="gtt-name"></div>
-    <div class="gt-city" id="gtt-city"></div>
-    <p class="gt-vibe" id="gtt-vibe"></p>
-    <span class="gt-sticker" id="gtt-sticker" style="display:none">✓ been here</span>
   </div>
 </div>
 
@@ -892,88 +894,58 @@ function initGlobe(){
   if(globeInited)return;
   globeInited=true;
 
-  const size=Math.min(window.innerWidth-60, window.innerHeight-180, 520);
-  const W=size, H=size, cx=W/2, cy=H/2;
-  const R=size/2-8; // globe circle radius — FIXED, never changes
-  let scale=R;      // projection scale — changes on zoom
-  let rotate=[10,20]; // start facing Europe/Americas
+  const map = L.map('world-map', {
+    center:[30, 0], zoom:2,
+    zoomControl:true,
+    attributionControl:false,
+    minZoom:2
+  });
 
-  const svg=d3.select('#globe-svg').attr('width',W).attr('height',H);
-  const proj=d3.geoOrthographic().scale(scale).translate([cx,cy]).clipAngle(90);
-  const path=d3.geoPath().projection(proj);
+  // CartoDB light tiles for clean elegant look
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    maxZoom:19, subdomains:'abcd'
+  }).addTo(map);
 
-  // ClipPath fixed at globe boundary — content zooms inside it
-  svg.append('defs').append('clipPath').attr('id','globe-clip')
-    .append('circle').attr('cx',cx).attr('cy',cy).attr('r',R);
-
-  svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R)
-    .attr('fill','#B8C8E0').attr('stroke','#8AAAC8').attr('stroke-width','0.5');
-
-  const landG=svg.append('g').attr('clip-path','url(#globe-clip)');
-  const pinsG=svg.append('g').attr('clip-path','url(#globe-clip)');
-
-  // Teardrop pin path — tip at (0,0), body goes upward
-  const PIN='M0,0 C-5,-6 -7,-11 -7,-15 A7,7 0 1,1 7,-15 C7,-11 5,-6 0,0 Z';
-
-  function drawPins(){
-    pinsG.selectAll('*').remove();
-    places.forEach(bar=>{
-      const lat=parseFloat(bar.lat), lng=parseFloat(bar.lng);
-      if(!lat&&lat!==0||!lng&&lng!==0)return;
-      const dist=d3.geoDistance([lng,lat],[-rotate[0],-rotate[1]]);
-      if(dist>=Math.PI/2)return;
-      const coords=proj([lng,lat]);
-      if(!coords)return;
-      const [x,y]=coords;
-      const visited=bar.visited;
-      const g=pinsG.append('g').attr('transform',`translate(${x},${y})`).attr('cursor','pointer');
-      g.append('path').attr('d',PIN)
-        .attr('fill',visited?'#060F24':'#EBF1FB')
-        .attr('stroke',visited?'#4A6899':'#1A3570')
-        .attr('stroke-width',1.5);
-      // dot inside circle part of pin
-      g.append('circle').attr('cx',0).attr('cy',-15).attr('r',3)
-        .attr('fill',visited?'#4A6899':'#1A3570').attr('opacity',0.6);
-      g.on('mousemove',(e)=>{
-          const tt=document.getElementById('globe-tt');
-          document.getElementById('gtt-name').textContent=bar.name;
-          document.getElementById('gtt-city').textContent=bar.city;
-          document.getElementById('gtt-vibe').textContent=(bar.vibe||'').slice(0,90)+'…';
-          document.getElementById('gtt-sticker').style.display=visited?'inline-flex':'none';
-          tt.style.left=(e.clientX+14)+'px';tt.style.top=(e.clientY-10)+'px';
-          tt.classList.add('show');
-        })
-        .on('mouseleave',()=>document.getElementById('globe-tt').classList.remove('show'))
-        .on('click',(e)=>{e.stopPropagation();document.getElementById('globe-tt').classList.remove('show');openModal(bar);});
+  // Custom pin icon factory
+  function makeIcon(visited){
+    const color = visited ? '#060F24' : '#ffffff';
+    const stroke = visited ? '#4A6899' : '#1A3570';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="30" viewBox="-8 -22 16 30">
+      <path d="M0,0 C-5,-6 -7,-11 -7,-15 A7,7 0 1,1 7,-15 C7,-11 5,-6 0,0 Z"
+        fill="${color}" stroke="${stroke}" stroke-width="1.5"/>
+      <circle cx="0" cy="-15" r="3" fill="${stroke}" opacity="0.7"/>
+    </svg>`;
+    return L.divIcon({
+      html: svg,
+      className:'',
+      iconSize:[22,30],
+      iconAnchor:[11,0]
     });
   }
 
-  function redraw(){
-    proj.scale(scale).rotate(rotate);
-    landG.selectAll('path').attr('d',path);
-    drawPins();
-  }
+  // Popup style
+  const popupOpts = {
+    closeButton:false,
+    maxWidth:240,
+    className:'map-popup'
+  };
 
-  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world=>{
-    const countries=topojson.feature(world,world.objects.countries);
-    landG.selectAll('path').data(countries.features).enter().append('path')
-      .attr('d',path).attr('fill','#D8DFF0').attr('stroke','#8898B8').attr('stroke-width','0.4');
-    drawPins();
+  places.forEach(bar=>{
+    const lat=parseFloat(bar.lat), lng=parseFloat(bar.lng);
+    if(!lat&&lat!==0||!lng&&lng!==0)return;
 
-    let ds=null,rs=null;
-    svg.call(d3.drag()
-      .on('start',e=>{ds=[e.x,e.y];rs=[...rotate]})
-      .on('drag',e=>{
-        rotate=[rs[0]+(e.x-ds[0])*0.4, Math.max(-70,Math.min(70,rs[1]-(e.y-ds[1])*0.3))];
-        redraw();
-      }));
+    const marker = L.marker([lat,lng], {icon: makeIcon(bar.visited)}).addTo(map);
 
-    // Zoom: scale the projection, globe circle stays fixed
-    svg.on('wheel',(e)=>{
-      e.preventDefault();
-      scale=Math.max(R*0.9,Math.min(R*6,scale-e.deltaY*1.2));
-      redraw();
-    });
+    const popupContent = `
+      <div class="mp-name">${bar.name}</div>
+      <div class="mp-city">${bar.city||''}</div>
+      <p class="mp-vibe">${(bar.vibe||'').slice(0,80)}…</p>
+      <button class="mp-btn" onclick="document.querySelector('.leaflet-popup-close-button').click();openModal(window._barRef_${bar.id})">
+        View details
+      </button>`;
+
+    window['_barRef_'+bar.id] = bar;
+    marker.bindPopup(popupContent, popupOpts);
   });
 }
 
@@ -983,7 +955,7 @@ function go(name,el){
   document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('active');
   if(el)el.classList.add('on');
-  if(name==='globe')setTimeout(initGlobe,60);
+  if(name==='globe') setTimeout(()=>{ initGlobe(); }, 60);
   return false;
 }
 
