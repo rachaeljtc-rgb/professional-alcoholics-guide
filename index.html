@@ -133,8 +133,8 @@ nav{
 
 /* ══ LIST CONTROLS ══ */
 .list-controls{
-  max-width:1120px;margin:0 auto;
-  padding:0.75rem 3rem 0.75rem;
+  max-width:1200px;margin:0 auto;
+  padding:0.75rem 2rem 0.75rem;
   text-align:left;
 }
 .list-controls-top{display:flex;align-items:center;gap:0.7rem;margin-bottom:0.55rem}
@@ -177,7 +177,7 @@ nav{
 
 /* Section labels */
 .section-label-row{
-  width:100%;max-width:1120px;margin:0 auto;
+  width:100%;max-width:1200px;margin:0 auto;
   display:flex;align-items:center;gap:1rem;padding:0 3rem 1rem;
 }
 .section-label-row h2{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:400;color:var(--navy);white-space:nowrap}
@@ -186,7 +186,7 @@ nav{
 .section-count{font-size:0.65rem;letter-spacing:0.1em;color:var(--ink-light);white-space:nowrap}
 
 /* View mode toggles */
-.view-toggle-row{width:100%;max-width:1120px;margin:0 auto;padding:0 3rem 1.25rem;display:flex;align-items:center;justify-content:flex-end;gap:0.5rem}
+.view-toggle-row{width:100%;max-width:1200px;margin:0 auto;padding:0 2rem 1.25rem;display:flex;align-items:center;justify-content:flex-end;gap:0.5rem}
 .view-btn{
   font-size:0.63rem;letter-spacing:0.08em;text-transform:uppercase;
   padding:0.45rem 0.8rem;border:1px solid var(--border-strong);
@@ -197,10 +197,10 @@ nav{
 .view-btn.on{background:transparent;border-color:var(--navy);color:var(--navy);font-weight:500}
 
 /* ══ GALLERY GRID ══ */
-.gallery-section{width:100%;max-width:1120px;margin:0 auto;padding:0 3rem 4rem}
+.gallery-section{width:100%;max-width:1200px;margin:0 auto;padding:0 2rem 4rem}
 .gallery-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  grid-template-columns:repeat(3,1fr);
   gap:1.5rem;
 }
 .gallery-grid.list-mode{grid-template-columns:1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden}
@@ -231,7 +231,7 @@ nav{
 .gallery-grid.list-mode .bar-card-body{flex:1}
 
 .bar-card-photo-wrap{position:relative}
-.bar-card-photo{width:100%;height:190px;object-fit:cover;display:block;background:var(--blue-light)}
+.bar-card-photo{width:100%;height:220px;object-fit:cover;display:block;background:var(--blue-light)}
 .gallery-grid.list-mode .bar-card-photo{height:100%;min-height:90px}
 
 .been-sticker{
@@ -262,6 +262,8 @@ nav{
 }
 .mrd{font-size:0.55rem;color:var(--border-strong);letter-spacing:0.05em}
 .mrd-on{color:var(--navy)}
+.mrd-half{color:var(--navy);opacity:0.5}
+.my-rating-num{font-size:0.72rem;font-weight:500;color:var(--navy);margin-left:0.25rem}
 .my-rating-label{
   font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;
   color:var(--ink-light);margin-left:0.3rem;
@@ -324,7 +326,7 @@ nav{
 .gt-sticker{display:inline-flex;align-items:center;gap:0.25rem;background:var(--navy);color:#fff;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.18rem 0.5rem;border-radius:20px;margin-top:0.4rem;font-weight:500}
 
 /* ══ DRINKS PAGE — recipe cards ══ */
-.drinks-page{padding:3rem 3rem 5rem;max-width:1120px;margin:0 auto}
+.drinks-page{padding:3rem 3rem 5rem;max-width:1200px;margin:0 auto}
 .drinks-header{margin-bottom:2.5rem}
 .drinks-header h2{font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;color:var(--navy)}
 .drinks-header h2 em{font-style:italic}
@@ -340,7 +342,7 @@ nav{
   display:flex;flex-direction:column;
 }
 .recipe-card-photo{
-  width:100%;height:200px;object-fit:cover;display:block;
+  width:100%;height:280px;object-fit:cover;display:block;
   background:var(--blue-pale);
 }
 .recipe-card-body{padding:1.4rem;flex:1;display:flex;flex-direction:column}
@@ -721,9 +723,16 @@ function toggleLike(e, id, btn){
 }
 
 function myRatingDots(r){
-  const n = Math.round(parseFloat(r));
+  const val = parseFloat(r);
+  const full = Math.floor(val);
+  const half = val - full >= 0.5;
   let s = '';
-  for(let i=1;i<=5;i++) s+=`<span class="mrd${i<=n?' mrd-on':''}">●</span>`;
+  for(let i=1;i<=5;i++){
+    if(i<=full) s+=`<span class="mrd mrd-on">●</span>`;
+    else if(i===full+1 && half) s+=`<span class="mrd mrd-half">◐</span>`;
+    else s+=`<span class="mrd">●</span>`;
+  }
+  s+=`<span class="my-rating-num">${val % 1 === 0 ? val+'.0' : val}</span>`;
   return s;
 }
 
