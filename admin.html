@@ -365,7 +365,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
       </div>
       <div class="form-group">
         <label>My Rating (out of 5)</label>
-        <input type="number" id="p-my-rating" placeholder="4" step="1" min="1" max="5">
+        <input type="number" id="p-my-rating" placeholder="4.5" step="0.1" min="1" max="5">
       </div>
       <div class="form-group">
         <label>Review count (e.g. 890 or 1.2K)</label>
@@ -598,7 +598,7 @@ async function savePlace(){
     lat:      parseFloat(document.getElementById('p-lat').value)||null,
     lng:      parseFloat(document.getElementById('p-lng').value)||null,
     rating:   parseFloat(document.getElementById('p-rating').value)||null,
-    my_rating:parseInt(document.getElementById('p-my-rating').value)||null,
+    my_rating:parseFloat(document.getElementById('p-my-rating').value)||null,
     reviews:  document.getElementById('p-reviews').value.trim()||null,
     photo:    document.getElementById('p-photo').value.trim()||null,
     vibe:     document.getElementById('p-vibe').value.trim(),
