@@ -792,7 +792,6 @@ function renderRecipes(){
   });
 }
 function formatMethod(text){
-  // Split on "1." "2." etc. patterns
   const steps = text.split(/(?=\b\d+\.\s)/).map(s=>s.trim()).filter(Boolean);
   if(steps.length <= 1) return `<div class="rc-step"><span class="rc-step-num">—</span><span>${text}</span></div>`;
   return steps.map(s=>{
@@ -801,6 +800,7 @@ function formatMethod(text){
     return `<div class="rc-step"><span class="rc-step-num">${m[1]}.</span><span>${m[2]}</span></div>`;
   }).join('');
 }
+function toggleR(id,el){
   const m=document.getElementById(id);
   m.classList.toggle('open');
   el.textContent=m.classList.contains('open')?'How to make it ↑':'How to make it ↓';
