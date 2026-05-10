@@ -222,6 +222,9 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
       <div class="nav-item" onclick="showSection('recipes',this)">
         <span class="nav-icon">🍹</span> Recipes
       </div>
+      <div class="nav-item" onclick="showSection('about',this)">
+        <span class="nav-icon">✦</span> About
+      </div>
     </nav>
     <div class="sidebar-footer">not-so-pro admin · v1</div>
   </div>
@@ -293,6 +296,32 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
           <tbody id="recipes-tbody"></tbody>
         </table>
         <div class="empty" id="recipes-empty" style="display:none">No recipes yet — add one above.</div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="section-page" id="sec-about">
+      <div class="page-top">
+        <h1>About</h1>
+        <button class="btn btn-primary" onclick="saveAbout()">Save changes</button>
+      </div>
+      <div class="table-wrap" style="padding:2rem;max-width:680px">
+        <div class="form-group" style="margin-bottom:1.25rem">
+          <label>Page title (use * to italicize, e.g. "Just a *curious person* with good taste.")</label>
+          <input type="text" id="about-title" placeholder="Just a *curious person* with good taste.">
+        </div>
+        <div class="form-group" style="margin-bottom:1.25rem">
+          <label>Body text (one paragraph per line)</label>
+          <textarea id="about-body" style="min-height:140px" placeholder="I'm a biology student in San Diego..."></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:1.25rem">
+          <label>Pull quote</label>
+          <textarea id="about-pull" style="min-height:70px" placeholder="I built this the way I approach most things..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Closing line</label>
+          <input type="text" id="about-closing" placeholder="No credentials. No agenda...">
+        </div>
       </div>
     </div>
 
@@ -658,12 +687,47 @@ async function deleteRecipe(id){
   } catch(e){ showToast('Error: ' + e.message, true); }
 }
 
+/* ══ ABOUT ══ */
+async function loadAbout(){
+  try {
+    const r = await fetch(`${API}/settings?select=*&key=eq.about`, {headers: H});
+    const data = await r.json();
+    if(Array.isArray(data) && data.length){
+      const about = JSON.parse(data[0].value);
+      document.getElementById('about-title').value   = about.title||'';
+      document.getElementById('about-body').value    = about.body||'';
+      document.getElementById('about-pull').value    = about.pull||'';
+      document.getElementById('about-closing').value = about.closing||'';
+    }
+  } catch(e){}
+}
+
+async function saveAbout(){
+  const payload = {
+    title:   document.getElementById('about-title').value.trim(),
+    body:    document.getElementById('about-body').value.trim(),
+    pull:    document.getElementById('about-pull').value.trim(),
+    closing: document.getElementById('about-closing').value.trim(),
+  };
+  try {
+    // upsert — insert or update if key exists
+    const r = await fetch(`${API}/settings`, {
+      method: 'POST',
+      headers: {...H, 'Prefer': 'resolution=merge-duplicates,return=minimal'},
+      body: JSON.stringify({key:'about', value: JSON.stringify(payload)})
+    });
+    if(!r.ok) throw new Error(await r.text());
+    showToast('About page saved ✓');
+  } catch(e){ showToast('Error: '+e.message, true); }
+}
+
 /* ══ NAV ══ */
 function showSection(name, el){
   document.querySelectorAll('.section-page').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
   document.getElementById('sec-'+name).classList.add('on');
   el.classList.add('on');
+  if(name==='about') loadAbout();
 }
 
 /* ══ TOAST ══ */
