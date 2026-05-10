@@ -359,7 +359,7 @@ nav{
 }
 .rc-expand-btn:hover{opacity:0.55}
 .rc-expandable{
-  display:none;margin-top:1rem;
+  display:none;margin-top:0.5rem;
 }
 .rc-expandable.open{display:block}
 .rc-method-body{
@@ -785,14 +785,14 @@ function renderRecipes(){
         <div class="rc-eyebrow">recipe</div>
         <div class="rc-name">${r.name}</div>
         ${subtitle?`<div class="rc-subtitle">${subtitle}</div>`:''}
+        <div class="rc-divider"></div>
+        <div class="rc-ing-label">Ingredients</div>
+        <ul class="rc-ing-list">${ingItems}</ul>
         <button class="rc-expand-btn" onclick="toggleR('${id}',this)">see recipe ↓</button>
         <div class="rc-expandable" id="${id}">
-          <p class="rc-desc">${desc}</p>
-          <div class="rc-divider"></div>
-          <div class="rc-ing-label">Ingredients</div>
-          <ul class="rc-ing-list">${ingItems}</ul>
-          <div class="rc-ing-label" style="margin-top:0.75rem">How to make it</div>
+          <div class="rc-ing-label" style="margin-top:0.5rem">How to make it</div>
           <div class="rc-method-body">${formatMethod(r.method||'')}</div>
+          ${desc?`<div class="rc-divider"></div><p class="rc-desc">${desc}</p>`:''}
           ${source?`<div class="rc-source">source — ${source}</div>`:''}
         </div>
       </div>`;
