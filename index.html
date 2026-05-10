@@ -260,8 +260,9 @@ nav{
 
 /* ══ GLOBE PAGE ══ */
 .globe-wrap{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:3rem 2rem;min-height:calc(100vh - 58px);background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:2.5rem 2rem 3rem;min-height:calc(100vh - 58px);background:var(--bg);
+  overflow:hidden;
 }
 .globe-header{text-align:center;margin-bottom:2rem}
 .globe-header h2{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:400;color:var(--navy)}
@@ -790,24 +791,34 @@ function initGlobe(){
   if(globeInited)return;
   globeInited=true;
 
-  const W=Math.min(window.innerWidth-48,640),H=W;
+  const size=Math.min(window.innerWidth-48, window.innerHeight-200, 560);
+  const W=size, H=size, cx=W/2, cy=H/2;
   let scale=W/2-10;
   let rotate=[-10,0];
 
   const svg=d3.select('#globe-svg').attr('width',W).attr('height',H);
-  const proj=d3.geoOrthographic().scale(scale).translate([W/2,H/2]).clipAngle(90);
+  const proj=d3.geoOrthographic().scale(scale).translate([cx,cy]).clipAngle(90);
   const path=d3.geoPath().projection(proj);
 
+  // ClipPath so pins never render outside the globe circle
+  svg.append('defs').append('clipPath').attr('id','globe-clip')
+    .append('circle').attr('cx',cx).attr('cy',cy).attr('r',scale-1);
+
   // Ocean
-  const ocean=svg.append('circle').attr('cx',W/2).attr('cy',H/2).attr('r',scale)
+  const ocean=svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',scale)
     .attr('fill','#B8C8E0').attr('stroke','#8AAAC8').attr('stroke-width','0.5');
 
-  const landG=svg.append('g');
-  const pinsG=svg.append('g');
+  const landG=svg.append('g').attr('clip-path','url(#globe-clip)');
+  const pinsG=svg.append('g').attr('clip-path','url(#globe-clip)');
+
+  function updateClip(){
+    svg.select('#globe-clip circle').attr('r',scale-1);
+    ocean.attr('r',scale);
+  }
 
   function redraw(){
-    ocean.attr('r',scale);
-    proj.scale(scale);
+    proj.scale(scale).rotate(rotate);
+    updateClip();
     landG.selectAll('path').attr('d',path);
     drawPins();
   }
@@ -820,29 +831,28 @@ function initGlobe(){
     function drawPins(){
       pinsG.selectAll('*').remove();
       places.forEach(bar=>{
-        if(!bar.lat||!bar.lng)return;
-        const geoPos=d3.geoDistance([bar.lng,bar.lat],proj.rotate().map(d=>-d));
+        const lat=parseFloat(bar.lat), lng=parseFloat(bar.lng);
+        if(!lat||!lng)return;
+        const geoPos=d3.geoDistance([lng,lat],rotate.map(d=>-d));
         if(geoPos>Math.PI/2)return;
-        const [x,y]=proj([bar.lng,bar.lat]);
-        if(!x||!y)return;
+        const coords=proj([lng,lat]);
+        if(!coords)return;
+        const [x,y]=coords;
 
         const g=pinsG.append('g').attr('cursor','pointer');
-
         g.append('circle')
           .attr('cx',x).attr('cy',y)
           .attr('r',bar.visited?7:6)
-          .attr('fill',bar.visited?'#0C1E3C':'#fff')
-          .attr('stroke',bar.visited?'#fff':'#4A7BC8')
+          .attr('fill',bar.visited?'#060F24':'#fff')
+          .attr('stroke',bar.visited?'#4A6899':'#1A3570')
           .attr('stroke-width',2);
 
-        // label on hover
         g.on('mousemove',(e)=>{
             const tt=document.getElementById('globe-tt');
             document.getElementById('gtt-name').textContent=bar.name;
             document.getElementById('gtt-city').textContent=bar.city;
-            document.getElementById('gtt-vibe').textContent=(bar.vibe||'').slice(0,80)+'…';
-            const st=document.getElementById('gtt-sticker');
-            st.style.display=bar.visited?'inline-flex':'none';
+            document.getElementById('gtt-vibe').textContent=(bar.vibe||'').slice(0,90)+'…';
+            document.getElementById('gtt-sticker').style.display=bar.visited?'inline-flex':'none';
             tt.style.left=(e.clientX+14)+'px';
             tt.style.top=(e.clientY-10)+'px';
             tt.classList.add('show');
@@ -863,17 +873,17 @@ function initGlobe(){
     svg.call(d3.drag()
       .on('start',e=>{dragStart=[e.x,e.y];rStart=[...rotate]})
       .on('drag',e=>{
-        const dx=(e.x-dragStart[0])*0.4;
-        const dy=(e.y-dragStart[1])*0.3;
-        rotate=[rStart[0]+dx, Math.max(-70,Math.min(70,rStart[1]-dy))];
-        proj.rotate(rotate);
+        rotate=[
+          rStart[0]+(e.x-dragStart[0])*0.4,
+          Math.max(-70,Math.min(70,rStart[1]-(e.y-dragStart[1])*0.3))
+        ];
         redraw();
       }));
 
-    // Zoom with scroll
+    // Scroll to zoom
     svg.on('wheel',(e)=>{
       e.preventDefault();
-      scale=Math.max(W/6, Math.min(W*2, scale - e.deltaY * 0.8));
+      scale=Math.max(W/5,Math.min(W*3,scale-e.deltaY*0.8));
       redraw();
     });
   });
