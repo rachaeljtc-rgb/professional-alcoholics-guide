@@ -6,6 +6,7 @@
 <title>Admin — not-so-professional alcoholic's guide</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -422,11 +423,37 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const ADMIN_PASS   = '$0upp0cket';   // change this!
 
 /* ══ STATE ══ */
-let db;
 let allPlaces  = [];
 let allRecipes = [];
 let editingPlaceId   = null;
 let editingRecipeId  = null;
+
+/* ══ REST HELPERS ══ */
+const H = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=minimal'
+};
+const API = SUPABASE_URL + '/rest/v1';
+
+async function dbGet(table){
+  const r = await fetch(`${API}/${table}?select=*&order=id`, {headers: H});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function dbInsert(table, data){
+  const r = await fetch(`${API}/${table}`, {method:'POST', headers:H, body:JSON.stringify(data)});
+  if(!r.ok) throw new Error(await r.text());
+}
+async function dbUpdate(table, id, data){
+  const r = await fetch(`${API}/${table}?id=eq.${id}`, {method:'PATCH', headers:H, body:JSON.stringify(data)});
+  if(!r.ok) throw new Error(await r.text());
+}
+async function dbDelete(table, id){
+  const r = await fetch(`${API}/${table}?id=eq.${id}`, {method:'DELETE', headers:H});
+  if(!r.ok) throw new Error(await r.text());
+}
 
 /* ══ LOCK ══ */
 function unlock(){
@@ -434,33 +461,24 @@ function unlock(){
   if(val === ADMIN_PASS){
     document.getElementById('lock').style.display='none';
     document.getElementById('app').style.display='block';
-    initSupabase();
+    loadAll();
   } else {
     document.getElementById('lock-err').style.display='block';
   }
 }
 
-/* ══ SUPABASE ══ */
-function initSupabase(){
+async function loadAll(){
   try {
-    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    loadAll();
+    const [p, r] = await Promise.all([dbGet('places'), dbGet('recipes')]);
+    allPlaces  = p || [];
+    allRecipes = r || [];
+    updateStats();
+    renderPlacesTable('');
+    renderRecipesTable();
   } catch(e){
-    showToast('Supabase error: ' + e.message, true);
+    showToast('Load error: ' + e.message, true);
     console.error(e);
   }
-}
-
-async function loadAll(){
-  const [{data:p},{data:r}] = await Promise.all([
-    db.from('places').select('*').order('id'),
-    db.from('recipes').select('*').order('id')
-  ]);
-  allPlaces  = p || [];
-  allRecipes = r || [];
-  updateStats();
-  renderPlacesTable('');
-  renderRecipesTable();
 }
 
 /* ══ STATS ══ */
@@ -552,24 +570,22 @@ async function savePlace(){
     visited:  document.getElementById('p-visited').checked,
     vibes,
   };
-  let err;
-  if(editingPlaceId){
-    ({error:err} = await db.from('places').update(payload).eq('id',editingPlaceId));
-  } else {
-    ({error:err} = await db.from('places').insert(payload));
-  }
-  if(err){ showToast('Error: '+err.message, true); return; }
-  showToast(editingPlaceId ? 'Place updated ✓' : 'Place added ✓');
-  closePlaceDrawer();
-  loadAll();
+  try {
+    if(editingPlaceId) await dbUpdate('places', editingPlaceId, payload);
+    else await dbInsert('places', payload);
+    showToast(editingPlaceId ? 'Place updated ✓' : 'Place added ✓');
+    closePlaceDrawer();
+    loadAll();
+  } catch(e){ showToast('Error: ' + e.message, true); }
 }
 
 async function deletePlace(id){
   if(!confirm('Delete this place?')) return;
-  const {error} = await db.from('places').delete().eq('id',id);
-  if(error){ showToast('Error: '+error.message, true); return; }
-  showToast('Deleted ✓');
-  loadAll();
+  try {
+    await dbDelete('places', id);
+    showToast('Deleted ✓');
+    loadAll();
+  } catch(e){ showToast('Error: ' + e.message, true); }
 }
 
 /* ══ RECIPES TABLE ══ */
@@ -624,24 +640,22 @@ async function saveRecipe(){
     ingredients: document.getElementById('r-ing').value.trim(),
     method:      document.getElementById('r-method').value.trim(),
   };
-  let err;
-  if(editingRecipeId){
-    ({error:err} = await db.from('recipes').update(payload).eq('id',editingRecipeId));
-  } else {
-    ({error:err} = await db.from('recipes').insert(payload));
-  }
-  if(err){ showToast('Error: '+err.message, true); return; }
-  showToast(editingRecipeId ? 'Recipe updated ✓' : 'Recipe added ✓');
-  closeRecipeDrawer();
-  loadAll();
+  try {
+    if(editingRecipeId) await dbUpdate('recipes', editingRecipeId, payload);
+    else await dbInsert('recipes', payload);
+    showToast(editingRecipeId ? 'Recipe updated ✓' : 'Recipe added ✓');
+    closeRecipeDrawer();
+    loadAll();
+  } catch(e){ showToast('Error: ' + e.message, true); }
 }
 
 async function deleteRecipe(id){
   if(!confirm('Delete this recipe?')) return;
-  const {error} = await db.from('recipes').delete().eq('id',id);
-  if(error){ showToast('Error: '+error.message, true); return; }
-  showToast('Deleted ✓');
-  loadAll();
+  try {
+    await dbDelete('recipes', id);
+    showToast('Deleted ✓');
+    loadAll();
+  } catch(e){ showToast('Error: ' + e.message, true); }
 }
 
 /* ══ NAV ══ */
