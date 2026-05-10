@@ -325,10 +325,15 @@ nav{
   font-size:0.62rem;letter-spacing:0.04em;
   color:var(--ink-light);line-height:1.5;
 }
+.rc-subtitle{
+  font-size:0.68rem;letter-spacing:0.08em;color:var(--ink-light);
+  margin-bottom:0.75rem;
+}
 .rc-desc{
   font-family:'Times New Roman',Times,serif;font-style:normal;
   font-size:0.92rem;color:var(--ink-mid);line-height:1.6;
   margin-bottom:1rem;flex:1;
+  white-space:pre-wrap;
 }
 .rc-divider{height:1px;background:var(--border);margin-bottom:1rem}
 .rc-ing-label{
@@ -641,19 +646,19 @@ const places = [
 ];
 
 const recipes = [
-  {name:"Aperol Spritz",origin:"Veneto, Italy",badge:"3 ingredients",source:"Serious Eats",
+  {name:"Aperol Spritz",origin:"Veneto, Italy",badge:"3 ingredients",subtitle:"the italian classic",source:"Serious Eats",
    desc:"The drink that unlocked aperitivo culture for me. Slightly bitter, very orange, impossible to have just one.",
    ing:"3 oz prosecco · 2 oz Aperol · 1 oz soda water · orange slice",
    method:"Build in a wine glass over ice. Prosecco first, then Aperol, then soda. Stir gently. Add the orange. That's genuinely it."},
-  {name:"Negroni",origin:"Florence, Italy",badge:"equal parts",source:"Difford's Guide",
+  {name:"Negroni",origin:"Florence, Italy",badge:"equal parts",subtitle:"equal parts, perfect result",source:"Difford's Guide",
    desc:"One part gin, one part Campari, one part sweet vermouth. Sounds too simple. Tastes like a decision.",
    ing:"1 oz gin · 1 oz Campari · 1 oz sweet vermouth · orange peel",
    method:"Stir over ice until very cold. Strain into a rocks glass over a large ice cube. Express the orange peel. Do not rush this."},
-  {name:"Paper Plane",origin:"Sasha Petraske, NYC",badge:"equal parts",source:"Punch Drink",
+  {name:"Paper Plane",origin:"Sasha Petraske, NYC",badge:"equal parts",subtitle:"the one that shouldn't work",source:"Punch Drink",
    desc:"Bourbon, Aperol, amaro, lemon — equal parts of everything. Shouldn't work. Does. I think about it a lot.",
    ing:"¾ oz bourbon · ¾ oz Aperol · ¾ oz Amaro Nonino · ¾ oz fresh lemon juice",
    method:"Shake hard with ice. Strain into a coupe. No garnish. It's perfect as written."},
-  {name:"Tommy's Margarita",origin:"Tommy's, San Francisco",badge:"the upgrade",source:"Bon Appétit",
+  {name:"Tommy's Margarita",origin:"Tommy's, San Francisco",badge:"the upgrade",subtitle:"the correct margarita",source:"Bon Appétit",
    desc:"Agave syrup instead of triple sec. One change. Makes it smoother, more honest. The correct margarita.",
    ing:"2 oz blanco tequila · 1 oz fresh lime juice · ½ oz agave syrup · salt (optional)",
    method:"Shake hard. Strain over fresh ice. Salt the rim if you want. Both choices are correct."},
@@ -719,19 +724,12 @@ function renderGallery(){
         <span class="heart">♥</span>
       </button>
       <div class="bar-card-photo-wrap">
-        <img class="bar-card-photo" src="${p.photo}" alt="${p.name}" loading="lazy">
+        <img class="bar-card-photo" src="${p.photo||''}" alt="${p.name}" loading="lazy">
         ${p.visited?'<div class="been-sticker">✓ been here</div>':''}
       </div>
       <div class="bar-card-body">
         <div class="bar-card-name">${p.name}</div>
-        <div class="bar-card-city">${p.city}</div>
-        <div class="bar-card-rating">
-          <span class="rating-stars">${stars(p.rating)}</span>
-          <span class="rating-num">${p.rating}</span>
-          <span class="rating-count">(${p.reviews})</span>
-        </div>
-        <p class="bar-card-vibe">${p.vibe}</p>
-        <div class="bar-card-tags">${tags.join('')}</div>
+        <div class="bar-card-city">${p.city||''}</div>
       </div>`;
     card.onclick=()=>openModal(p);
     grid.appendChild(card);
@@ -774,19 +772,24 @@ function renderRecipes(){
     const id='rc'+i;
     const div=document.createElement('div');
     div.className='recipe-card';
-    const ingItems = r.ing.split('·').map(s=>`<li>${s.trim()}</li>`).join('');
+    const ing = (r.ing||r.ingredients||'');
+    const ingItems = ing.split('·').map(s=>`<li>${s.trim()}</li>`).join('');
+    const desc = (r.desc||r.description||'');
+    const subtitle = r.subtitle||r.badge||'';
+    const source = r.source||'';
     div.innerHTML=`
-      <img class="recipe-card-photo" src="${recipePhotos[i]}" alt="${r.name}" loading="lazy">
+      <img class="recipe-card-photo" src="${recipePhotos[i]||''}" alt="${r.name}" loading="lazy">
       <div class="recipe-card-body">
         <div class="rc-eyebrow">recipe</div>
         <div class="rc-name">${r.name}</div>
-        <p class="rc-desc">${r.desc}</p>
+        ${subtitle?`<div class="rc-subtitle">${subtitle}</div>`:''}
+        <p class="rc-desc">${desc}</p>
         <div class="rc-divider"></div>
         <div class="rc-ing-label">Ingredients</div>
         <ul class="rc-ing-list">${ingItems}</ul>
         <button class="rc-method-toggle" onclick="toggleR('${id}',this)">How to make it ↓</button>
         <div class="rc-method" id="${id}">${formatMethod(r.method||'')}</div>
-        ${(r.source||r.origin)?`<div class="rc-source">source — ${r.source||r.origin}</div>`:''}
+        ${source?`<div class="rc-source">source — ${source}</div>`:''}
       </div>`;
     grid.appendChild(div);
   });
