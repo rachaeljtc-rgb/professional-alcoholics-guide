@@ -394,6 +394,10 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
         <input type="url" id="r-photo" placeholder="https://images.unsplash.com/…">
       </div>
       <div class="form-group full">
+        <label>Subtitle (short tagline, e.g. "the correct margarita")</label>
+        <input type="text" id="r-subtitle" placeholder="the one that shouldn't work">
+      </div>
+      <div class="form-group full">
         <label>Source / Reference (e.g. Serious Eats, Bon Appétit)</label>
         <input type="text" id="r-source" placeholder="Serious Eats">
       </div>
@@ -625,7 +629,8 @@ function openRecipeDrawer(id){
   document.getElementById('r-origin').value = r?.origin||'';
   document.getElementById('r-badge').value  = r?.badge||'';
   document.getElementById('r-photo').value  = r?.photo||'';
-  document.getElementById('r-source').value = r?.source||'';
+  document.getElementById('r-subtitle').value = r?.subtitle||'';
+  document.getElementById('r-source').value   = r?.source||'';
   document.getElementById('r-ing').value    = r?.ingredients||r?.ing||'';
   document.getElementById('r-method').value = r?.method||'';
   document.getElementById('recipe-overlay').classList.add('open');
@@ -640,6 +645,7 @@ async function saveRecipe(){
     origin:      document.getElementById('r-origin').value.trim()||null,
     badge:       document.getElementById('r-badge').value.trim()||null,
     photo:       document.getElementById('r-photo').value.trim()||null,
+    subtitle:    document.getElementById('r-subtitle').value.trim()||null,
     source:      document.getElementById('r-source').value.trim()||null,
     description: document.getElementById('r-desc').value.trim(),
     ingredients: document.getElementById('r-ing').value.trim(),
