@@ -514,7 +514,8 @@ nav{
       </div>
       <div class="filter-row">
         <span class="filter-row-label">vibe</span>
-        <button class="qf-chip" onclick="setFilter('fancy',this)" data-group="vibe">✦ Fancy-ish</button>
+        <button class="qf-chip" onclick="setFilter('fancy',this)" data-group="vibe">Classy</button>
+        <button class="qf-chip" onclick="setFilter('stylish',this)" data-group="vibe">Stylish</button>
         <button class="qf-chip" onclick="setFilter('social',this)" data-group="vibe">Loud & Social</button>
         <button class="qf-chip" onclick="setFilter('solo',this)" data-group="vibe">Solo Drinking</button>
         <button class="qf-chip" onclick="setFilter('date',this)" data-group="vibe">Date Night</button>
@@ -596,10 +597,10 @@ const places = [
    vibes:["fancy","date","solo"],photo:"https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=75"},
   {id:3,type:"bar",name:"Tayer + Elementary",city:"London, UK",lat:51.5265,lng:-0.0838,visited:true,rating:4.7,reviews:"640",
    vibe:"Genuinely world-class. The kind of bar that makes you rethink your whole relationship with drinking.",
-   vibes:["fancy","date"],photo:"https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=75"},
+   vibes:["fancy","date","stylish"],photo:"https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=75"},
   {id:4,type:"bar",name:"Overstory",city:"New York, NY",lat:40.7115,lng:-74.0130,visited:true,rating:4.4,reviews:"1.2K",
    vibe:"Rooftop with a view that takes your breath away. Seasonal drinks. Go at golden hour.",
-   vibes:["fancy","date","social"],photo:"https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=600&q=75"},
+   vibes:["fancy","date","social","stylish"],photo:"https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=600&q=75"},
   {id:5,type:"bar",name:"Please Don't Tell",city:"New York, NY",lat:40.7264,lng:-73.9849,visited:false,rating:4.6,reviews:"2.1K",
    vibe:"You enter through a phone booth in a hot dog restaurant. The concept alone is worth the trip.",
    vibes:["date","social","fancy"],photo:"https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=600&q=75"},
@@ -664,7 +665,7 @@ function toggleLike(e, id, btn){
 }
 
 /* ══════════════ GALLERY ══════════════ */
-const vibeLabels = {fancy:'✦ fancy-ish',social:'loud & social',solo:'solo drinking',date:'date night',restaurant:'restaurant'};
+const vibeLabels = {fancy:'classy',social:'loud & social',solo:'solo drinking',date:'date night',restaurant:'restaurant',stylish:'stylish'};
 
 function stars(r){
   const full=Math.floor(r), half=r%1>=0.5;
@@ -924,27 +925,30 @@ function closeModal(){
 
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
-/* ══════════════ SUPABASE CONFIG ══════════════
-   Fill in your project URL and anon key from supabase.com
-   Leave as-is to use the built-in default data
-═══════════════════════════════════════════════ */
-const SUPABASE_URL  = 'https://ojioxxrrhvkabiccakma.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qaW94eHJyaHZrYWJpY2Nha21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNjg1ODAsImV4cCI6MjA5Mzk0NDU4MH0.cnS10p7k-WK6N34-ecBW30yulucqIzMYqY9AxAU5yls';
+/* ══════════════ SUPABASE ══════════════ */
+const SUPABASE_URL = 'https://ojioxxrrhvkabiccakma.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qaW94eHJyaHZrYWJpY2Nha21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNjg1ODAsImV4cCI6MjA5Mzk0NDU4MH0.cnS10p7k-WK6N34-ecBW30yulucqIzMYqY9AxAU5yls';
+const API = SUPABASE_URL + '/rest/v1';
+const H = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
 
 /* ══════════════ INIT ══════════════ */
 async function init(){
-  // Try Supabase first, fall back to hardcoded data
-  if(SUPABASE_URL !== 'https://ojioxxrrhvkabiccakma.supabase.co'){
-    try {
-      const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      const [{data: pData}, {data: rData}] = await Promise.all([
-        db.from('places').select('*').order('id'),
-        db.from('recipes').select('*').order('id')
-      ]);
-      if(pData && pData.length) places.length=0, places.push(...pData.map(p=>({...p, vibes:p.vibes||[]})));
-      if(rData && rData.length) recipes.length=0, recipes.push(...rData);
-    } catch(e){ console.warn('Supabase unavailable, using default data', e); }
-  }
+  try {
+    const [pRes, rRes] = await Promise.all([
+      fetch(`${API}/places?select=*&order=id`, {headers: H}),
+      fetch(`${API}/recipes?select=*&order=id`, {headers: H})
+    ]);
+    const pData = await pRes.json();
+    const rData = await rRes.json();
+    if(Array.isArray(pData) && pData.length){
+      places.length = 0;
+      places.push(...pData.map(p=>({...p, vibes: p.vibes||[]})));
+    }
+    if(Array.isArray(rData) && rData.length){
+      recipes.length = 0;
+      recipes.push(...rData.map(r=>({...r, ing: r.ingredients, desc: r.description})));
+    }
+  } catch(e){ console.warn('Could not load from Supabase, using default data', e); }
   renderGallery();
   renderRecipes();
 }
