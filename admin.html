@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — not-so-professional alcoholic's guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#060F24;--royal:#0B1A3E;--blue:#1A3570;
+  --bg:#F4F6FA;--surface:#fff;--border:rgba(6,15,36,0.12);
+  --border-strong:rgba(6,15,36,0.22);--ink:#060F24;
+  --ink-mid:#2D4464;--ink-light:#6B8CB8;
+  --gold:#C4A24A;--red:#B84040;--green:#2E7D4F;
+  --shadow:0 2px 16px rgba(6,15,36,0.08);
+  --shadow-md:0 4px 32px rgba(6,15,36,0.14);
+}
+body{font-family:'DM Sans',sans-serif;font-weight:300;background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* ── LOCK SCREEN ── */
+#lock{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;align-items:center;justify-content:center;z-index:9999;
+}
+.lock-box{
+  background:var(--surface);border-radius:12px;padding:2.5rem;
+  width:100%;max-width:360px;text-align:center;box-shadow:var(--shadow-md);
+}
+.lock-logo{
+  font-family:'Playfair Display',serif;font-size:1rem;
+  color:var(--ink-light);margin-bottom:0.3rem;
+}
+.lock-logo em{font-style:italic;color:var(--navy)}
+.lock-title{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-light);margin-bottom:1.75rem}
+.lock-input{
+  width:100%;padding:0.75rem 1rem;border:1px solid var(--border-strong);
+  border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.9rem;
+  color:var(--ink);background:var(--bg);outline:none;margin-bottom:0.75rem;
+  letter-spacing:0.05em;
+}
+.lock-input:focus{border-color:var(--blue)}
+.lock-btn{
+  width:100%;padding:0.75rem;background:var(--navy);color:#fff;border:none;
+  border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.72rem;
+  letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:background 0.2s;
+}
+.lock-btn:hover{background:var(--royal)}
+.lock-err{font-size:0.75rem;color:var(--red);margin-top:0.5rem;display:none}
+
+/* ── LAYOUT ── */
+#app{display:none;min-height:100vh}
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:220px;
+  background:var(--navy);display:flex;flex-direction:column;z-index:100;
+}
+.sidebar-logo{
+  padding:1.5rem 1.4rem 1rem;
+  font-family:'Playfair Display',serif;font-size:0.85rem;color:#fff;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo em{font-style:italic;opacity:0.85}
+.sidebar-nav{padding:1rem 0;flex:1}
+.nav-item{
+  display:flex;align-items:center;gap:0.7rem;
+  padding:0.7rem 1.4rem;color:rgba(255,255,255,0.55);
+  font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.18s;border-left:3px solid transparent;
+}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,0.06)}
+.nav-item.on{color:#fff;border-left-color:var(--gold);background:rgba(255,255,255,0.08)}
+.nav-icon{font-size:1rem;width:18px;text-align:center}
+.sidebar-footer{
+  padding:1rem 1.4rem;border-top:1px solid rgba(255,255,255,0.08);
+  font-size:0.65rem;color:rgba(255,255,255,0.3);letter-spacing:0.06em;
+}
+.main{margin-left:220px;padding:2rem 2.5rem;min-height:100vh}
+
+/* ── PAGE HEADER ── */
+.page-top{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1.75rem;
+}
+.page-top h1{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:400;color:var(--navy)}
+.page-top h1 em{font-style:italic}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:0.4rem;
+  padding:0.6rem 1.2rem;border-radius:6px;font-family:'DM Sans',sans-serif;
+  font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;
+  border:none;cursor:pointer;transition:all 0.18s;white-space:nowrap;
+}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--royal)}
+.btn-outline{background:transparent;border:1px solid var(--border-strong);color:var(--ink-mid)}
+.btn-outline:hover{background:var(--bg);color:var(--navy)}
+.btn-danger{background:transparent;border:1px solid rgba(184,64,64,0.3);color:var(--red)}
+.btn-danger:hover{background:#FDF0F0}
+.btn-sm{padding:0.35rem 0.75rem;font-size:0.62rem}
+
+/* ── STATS ROW ── */
+.stats-row{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:1.1rem 1.4rem;flex:1;min-width:130px;box-shadow:var(--shadow);
+}
+.stat-num{font-family:'Playfair Display',serif;font-size:2rem;color:var(--navy);font-weight:400}
+.stat-label{font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-light);margin-top:0.1rem}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--bg)}
+th{padding:0.7rem 1rem;text-align:left;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-light);border-bottom:1px solid var(--border);font-weight:400}
+td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);font-size:0.82rem;color:var(--ink-mid);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+.td-name{font-weight:500;color:var(--navy);font-size:0.88rem}
+.td-photo{width:44px;height:36px;object-fit:cover;border-radius:4px;background:var(--bg);display:block}
+.type-badge{
+  font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;
+  padding:0.18rem 0.55rem;border-radius:4px;
+}
+.type-bar{background:#EBF2FF;color:var(--blue)}
+.type-restaurant{background:#F0EAF8;color:#5C2A8A}
+.visited-check{color:var(--green);font-size:0.9rem}
+.stars{color:var(--gold);font-size:0.75rem}
+.td-actions{display:flex;gap:0.4rem;align-items:center}
+
+/* ── MODAL / DRAWER ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(6,15,36,0.45);backdrop-filter:blur(3px);
+  z-index:500;display:none;align-items:flex-start;justify-content:flex-end;
+}
+.overlay.open{display:flex}
+.drawer{
+  background:var(--surface);width:100%;max-width:520px;height:100vh;
+  overflow-y:auto;box-shadow:-4px 0 40px rgba(6,15,36,0.18);
+  padding:2rem;display:flex;flex-direction:column;gap:1.25rem;
+}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem}
+.drawer-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:400;color:var(--navy)}
+.drawer-close{background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--ink-light);padding:0.25rem}
+.drawer-close:hover{color:var(--navy)}
+
+/* ── FORM ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.form-group{display:flex;flex-direction:column;gap:0.35rem}
+.form-group.full{grid-column:1/-1}
+label{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-light)}
+input[type=text],input[type=number],input[type=url],textarea,select{
+  padding:0.6rem 0.8rem;border:1px solid var(--border-strong);border-radius:6px;
+  font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--ink);
+  background:var(--bg);outline:none;transition:border-color 0.2s;width:100%;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);background:#fff}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+.checkbox-row{display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:var(--ink-mid)}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
+.vibes-check{display:flex;flex-wrap:wrap;gap:0.5rem}
+.vibe-opt{display:flex;align-items:center;gap:0.35rem;font-size:0.78rem;color:var(--ink-mid)}
+.form-footer{display:flex;gap:0.6rem;justify-content:flex-end;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.5rem}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:9999;
+  background:var(--navy);color:#fff;
+  padding:0.75rem 1.25rem;border-radius:8px;
+  font-size:0.78rem;letter-spacing:0.04em;
+  box-shadow:var(--shadow-md);opacity:0;transition:opacity 0.3s;pointer-events:none;
+}
+.toast.show{opacity:1}
+.toast.err{background:var(--red)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:3rem;color:var(--ink-light);font-size:0.85rem}
+
+/* ── SECTION PAGES ── */
+.section-page{display:none}
+.section-page.on{display:block}
+
+/* search */
+.table-controls{display:flex;gap:0.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+.table-search{
+  flex:1;min-width:200px;display:flex;align-items:center;
+  border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);overflow:hidden;
+}
+.table-search-icon{padding:0 0.75rem;color:var(--ink-light)}
+.table-search input{border:none;outline:none;padding:0.55rem 0;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:var(--ink);background:transparent;flex:1}
+</style>
+</head>
+<body>
+
+<!-- ── LOCK SCREEN ── -->
+<div id="lock">
+  <div class="lock-box">
+    <div class="lock-logo">a <em>not-so-professional</em> alcoholic's guide</div>
+    <div class="lock-title">admin panel</div>
+    <input class="lock-input" type="password" id="pw-input" placeholder="password"
+      onkeydown="if(event.key==='Enter')unlock()">
+    <button class="lock-btn" onclick="unlock()">enter</button>
+    <div class="lock-err" id="lock-err">wrong password</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">a <em>not-so-professional</em><br>alcoholic's guide</div>
+    <nav class="sidebar-nav">
+      <div class="nav-item on" onclick="showSection('dashboard',this)">
+        <span class="nav-icon">◈</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showSection('places',this)">
+        <span class="nav-icon">📍</span> Places
+      </div>
+      <div class="nav-item" onclick="showSection('recipes',this)">
+        <span class="nav-icon">🍹</span> Recipes
+      </div>
+    </nav>
+    <div class="sidebar-footer">not-so-pro admin · v1</div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Dashboard -->
+    <div class="section-page on" id="sec-dashboard">
+      <div class="page-top">
+        <h1>Dashboard</h1>
+      </div>
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total places</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-bars">—</div><div class="stat-label">Bars</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-restaurants">—</div><div class="stat-label">Restaurants</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-visited">—</div><div class="stat-label">Been there</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-recipes">—</div><div class="stat-label">Recipes</div></div>
+      </div>
+      <p style="font-size:0.82rem;color:var(--ink-light);line-height:1.7">
+        Use the sidebar to manage places and recipes.<br>
+        Changes go live on your site immediately.
+      </p>
+    </div>
+
+    <!-- Places -->
+    <div class="section-page" id="sec-places">
+      <div class="page-top">
+        <h1>Places</h1>
+        <button class="btn btn-primary" onclick="openPlaceDrawer(null)">+ Add place</button>
+      </div>
+      <div class="table-controls">
+        <div class="table-search">
+          <span class="table-search-icon">⌕</span>
+          <input type="text" placeholder="Search places…" oninput="filterPlacesTable(this.value)">
+        </div>
+        <select id="type-filter" onchange="filterPlacesTable(document.querySelector('.table-search input').value)"
+          style="padding:0.55rem 0.8rem;border:1px solid var(--border-strong);border-radius:6px;font-size:0.82rem;background:var(--surface);color:var(--ink);outline:none">
+          <option value="">All types</option>
+          <option value="bar">Bars only</option>
+          <option value="restaurant">Restaurants only</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Photo</th><th>Name</th><th>City</th><th>Type</th>
+              <th>Rating</th><th>Visited</th><th>Vibes</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="places-tbody"></tbody>
+        </table>
+        <div class="empty" id="places-empty" style="display:none">No places yet — add one above.</div>
+      </div>
+    </div>
+
+    <!-- Recipes -->
+    <div class="section-page" id="sec-recipes">
+      <div class="page-top">
+        <h1>Recipes</h1>
+        <button class="btn btn-primary" onclick="openRecipeDrawer(null)">+ Add recipe</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Photo</th><th>Name</th><th>Origin</th><th>Badge</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="recipes-tbody"></tbody>
+        </table>
+        <div class="empty" id="recipes-empty" style="display:none">No recipes yet — add one above.</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── PLACE DRAWER ── -->
+<div class="overlay" id="place-overlay" onclick="if(event.target===this)closePlaceDrawer()">
+  <div class="drawer">
+    <div class="drawer-header">
+      <div class="drawer-title" id="place-drawer-title">Add place</div>
+      <button class="drawer-close" onclick="closePlaceDrawer()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label>Name *</label>
+        <input type="text" id="p-name" placeholder="e.g. Satan's Whiskers">
+      </div>
+      <div class="form-group">
+        <label>City *</label>
+        <input type="text" id="p-city" placeholder="e.g. London, UK">
+      </div>
+      <div class="form-group">
+        <label>Type *</label>
+        <select id="p-type">
+          <option value="bar">Bar</option>
+          <option value="restaurant">Restaurant</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Latitude</label>
+        <input type="number" id="p-lat" placeholder="51.5280" step="any">
+      </div>
+      <div class="form-group">
+        <label>Longitude</label>
+        <input type="number" id="p-lng" placeholder="-0.0614" step="any">
+      </div>
+      <div class="form-group">
+        <label>Google Rating (e.g. 4.6)</label>
+        <input type="number" id="p-rating" placeholder="4.6" step="0.1" min="1" max="5">
+      </div>
+      <div class="form-group">
+        <label>Review count (e.g. 890 or 1.2K)</label>
+        <input type="text" id="p-reviews" placeholder="890">
+      </div>
+      <div class="form-group full">
+        <label>Photo URL</label>
+        <input type="url" id="p-photo" placeholder="https://images.unsplash.com/…">
+      </div>
+      <div class="form-group full">
+        <label>Vibe description *</label>
+        <textarea id="p-vibe" placeholder="Describe the bar in your own voice…"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Vibes (select all that apply)</label>
+        <div class="vibes-check">
+          <label class="vibe-opt"><input type="checkbox" value="fancy" id="v-fancy"> ✦ fancy-ish</label>
+          <label class="vibe-opt"><input type="checkbox" value="social" id="v-social"> loud & social</label>
+          <label class="vibe-opt"><input type="checkbox" value="solo" id="v-solo"> solo drinking</label>
+          <label class="vibe-opt"><input type="checkbox" value="date" id="v-date"> date night</label>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="checkbox-row">
+          <input type="checkbox" id="p-visited"> I've been here
+        </label>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-outline" onclick="closePlaceDrawer()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePlace()">Save place</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RECIPE DRAWER ── -->
+<div class="overlay" id="recipe-overlay" onclick="if(event.target===this)closeRecipeDrawer()">
+  <div class="drawer">
+    <div class="drawer-header">
+      <div class="drawer-title" id="recipe-drawer-title">Add recipe</div>
+      <button class="drawer-close" onclick="closeRecipeDrawer()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Drink name *</label>
+        <input type="text" id="r-name" placeholder="e.g. Negroni">
+      </div>
+      <div class="form-group">
+        <label>Origin</label>
+        <input type="text" id="r-origin" placeholder="e.g. Florence, Italy">
+      </div>
+      <div class="form-group full">
+        <label>Badge / Subtitle (e.g. "equal parts", "3 ingredients")</label>
+        <input type="text" id="r-badge" placeholder="equal parts">
+      </div>
+      <div class="form-group full">
+        <label>Photo URL</label>
+        <input type="url" id="r-photo" placeholder="https://images.unsplash.com/…">
+      </div>
+      <div class="form-group full">
+        <label>Your description *</label>
+        <textarea id="r-desc" placeholder="Why you love this drink…"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Ingredients (use · to separate, e.g. 1 oz gin · 1 oz Campari)</label>
+        <textarea id="r-ing" placeholder="1 oz gin · 1 oz Campari · 1 oz sweet vermouth · orange peel"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Method / How to make it</label>
+        <textarea id="r-method" placeholder="Stir over ice until very cold…"></textarea>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-outline" onclick="closeRecipeDrawer()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRecipe()">Save recipe</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ CONFIG — fill these in ══ */
+const SUPABASE_URL = 'https://ojioxxrrhvkabiccakma.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qaW94eHJyaHZrYWJpY2Nha21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNjg1ODAsImV4cCI6MjA5Mzk0NDU4MH0.cnS10p7k-WK6N34-ecBW30yulucqIzMYqY9AxAU5yls';
+const ADMIN_PASS   = '$0upp0cket';   // change this!
+
+/* ══ STATE ══ */
+let db;
+let allPlaces  = [];
+let allRecipes = [];
+let editingPlaceId   = null;
+let editingRecipeId  = null;
+
+/* ══ LOCK ══ */
+function unlock(){
+  const val = document.getElementById('pw-input').value;
+  if(val === ADMIN_PASS){
+    document.getElementById('lock').style.display='none';
+    document.getElementById('app').style.display='block';
+    initSupabase();
+  } else {
+    document.getElementById('lock-err').style.display='block';
+  }
+}
+
+/* ══ SUPABASE ══ */
+function initSupabase(){
+  if(SUPABASE_URL==='https://ojioxxrrhvkabiccakma.supabase.co'){
+    showToast('⚠ Add your Supabase credentials at the top of admin.html', true);
+    return;
+  }
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  loadAll();
+}
+
+async function loadAll(){
+  const [{data:p},{data:r}] = await Promise.all([
+    db.from('places').select('*').order('id'),
+    db.from('recipes').select('*').order('id')
+  ]);
+  allPlaces  = p || [];
+  allRecipes = r || [];
+  updateStats();
+  renderPlacesTable('');
+  renderRecipesTable();
+}
+
+/* ══ STATS ══ */
+function updateStats(){
+  document.getElementById('stat-total').textContent     = allPlaces.length;
+  document.getElementById('stat-bars').textContent      = allPlaces.filter(p=>p.type==='bar').length;
+  document.getElementById('stat-restaurants').textContent = allPlaces.filter(p=>p.type==='restaurant').length;
+  document.getElementById('stat-visited').textContent   = allPlaces.filter(p=>p.visited).length;
+  document.getElementById('stat-recipes').textContent   = allRecipes.length;
+}
+
+/* ══ PLACES TABLE ══ */
+function filterPlacesTable(search){
+  const type = document.getElementById('type-filter').value;
+  const s = search.toLowerCase();
+  const filtered = allPlaces.filter(p=>{
+    const matchType = !type || p.type===type;
+    const matchSearch = !s || p.name.toLowerCase().includes(s) || (p.city||'').toLowerCase().includes(s);
+    return matchType && matchSearch;
+  });
+  renderPlacesTable('', filtered);
+}
+
+function renderPlacesTable(search, data){
+  const rows = data || allPlaces;
+  const tbody = document.getElementById('places-tbody');
+  const empty = document.getElementById('places-empty');
+  tbody.innerHTML='';
+  if(!rows.length){ empty.style.display='block'; return; }
+  empty.style.display='none';
+  rows.forEach(p=>{
+    const vibes=(p.vibes||[]).join(', ');
+    const stars='★'.repeat(Math.floor(p.rating||0));
+    tbody.innerHTML+=`
+      <tr>
+        <td><img class="td-photo" src="${p.photo||''}" onerror="this.style.opacity=0"></td>
+        <td><div class="td-name">${p.name}</div></td>
+        <td style="font-size:0.78rem">${p.city||''}</td>
+        <td><span class="type-badge ${p.type==='bar'?'type-bar':'type-restaurant'}">${p.type}</span></td>
+        <td><span class="stars">${stars}</span> <span style="font-size:0.75rem">${p.rating||''}</span></td>
+        <td>${p.visited?'<span class="visited-check">✓</span>':''}</td>
+        <td style="font-size:0.72rem;color:var(--ink-light)">${vibes}</td>
+        <td>
+          <div class="td-actions">
+            <button class="btn btn-outline btn-sm" onclick="openPlaceDrawer(${p.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePlace(${p.id})">Del</button>
+          </div>
+        </td>
+      </tr>`;
+  });
+}
+
+/* ══ PLACE DRAWER ══ */
+function openPlaceDrawer(id){
+  editingPlaceId = id;
+  const p = id ? allPlaces.find(x=>x.id===id) : null;
+  document.getElementById('place-drawer-title').textContent = p ? 'Edit place' : 'Add place';
+  document.getElementById('p-name').value    = p?.name||'';
+  document.getElementById('p-city').value    = p?.city||'';
+  document.getElementById('p-type').value    = p?.type||'bar';
+  document.getElementById('p-lat').value     = p?.lat||'';
+  document.getElementById('p-lng').value     = p?.lng||'';
+  document.getElementById('p-rating').value  = p?.rating||'';
+  document.getElementById('p-reviews').value = p?.reviews||'';
+  document.getElementById('p-photo').value   = p?.photo||'';
+  document.getElementById('p-vibe').value    = p?.vibe||'';
+  document.getElementById('p-visited').checked = p?.visited||false;
+  ['fancy','social','solo','date'].forEach(v=>{
+    document.getElementById('v-'+v).checked = (p?.vibes||[]).includes(v);
+  });
+  document.getElementById('place-overlay').classList.add('open');
+}
+function closePlaceDrawer(){ document.getElementById('place-overlay').classList.remove('open'); }
+
+async function savePlace(){
+  const name = document.getElementById('p-name').value.trim();
+  const city = document.getElementById('p-city').value.trim();
+  if(!name||!city){ showToast('Name and city are required', true); return; }
+  const vibes = ['fancy','social','solo','date'].filter(v=>document.getElementById('v-'+v).checked);
+  const payload = {
+    name, city,
+    type:     document.getElementById('p-type').value,
+    lat:      parseFloat(document.getElementById('p-lat').value)||null,
+    lng:      parseFloat(document.getElementById('p-lng').value)||null,
+    rating:   parseFloat(document.getElementById('p-rating').value)||null,
+    reviews:  document.getElementById('p-reviews').value.trim()||null,
+    photo:    document.getElementById('p-photo').value.trim()||null,
+    vibe:     document.getElementById('p-vibe').value.trim(),
+    visited:  document.getElementById('p-visited').checked,
+    vibes,
+  };
+  let err;
+  if(editingPlaceId){
+    ({error:err} = await db.from('places').update(payload).eq('id',editingPlaceId));
+  } else {
+    ({error:err} = await db.from('places').insert(payload));
+  }
+  if(err){ showToast('Error: '+err.message, true); return; }
+  showToast(editingPlaceId ? 'Place updated ✓' : 'Place added ✓');
+  closePlaceDrawer();
+  loadAll();
+}
+
+async function deletePlace(id){
+  if(!confirm('Delete this place?')) return;
+  const {error} = await db.from('places').delete().eq('id',id);
+  if(error){ showToast('Error: '+error.message, true); return; }
+  showToast('Deleted ✓');
+  loadAll();
+}
+
+/* ══ RECIPES TABLE ══ */
+function renderRecipesTable(){
+  const tbody = document.getElementById('recipes-tbody');
+  const empty = document.getElementById('recipes-empty');
+  tbody.innerHTML='';
+  if(!allRecipes.length){ empty.style.display='block'; return; }
+  empty.style.display='none';
+  allRecipes.forEach(r=>{
+    tbody.innerHTML+=`
+      <tr>
+        <td><img class="td-photo" src="${r.photo||''}" onerror="this.style.opacity=0"></td>
+        <td><div class="td-name">${r.name}</div></td>
+        <td style="font-size:0.78rem">${r.origin||''}</td>
+        <td style="font-size:0.72rem;color:var(--ink-light)">${r.badge||''}</td>
+        <td>
+          <div class="td-actions">
+            <button class="btn btn-outline btn-sm" onclick="openRecipeDrawer(${r.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteRecipe(${r.id})">Del</button>
+          </div>
+        </td>
+      </tr>`;
+  });
+}
+
+/* ══ RECIPE DRAWER ══ */
+function openRecipeDrawer(id){
+  editingRecipeId = id;
+  const r = id ? allRecipes.find(x=>x.id===id) : null;
+  document.getElementById('recipe-drawer-title').textContent = r ? 'Edit recipe' : 'Add recipe';
+  document.getElementById('r-name').value   = r?.name||'';
+  document.getElementById('r-origin').value = r?.origin||'';
+  document.getElementById('r-badge').value  = r?.badge||'';
+  document.getElementById('r-photo').value  = r?.photo||'';
+  document.getElementById('r-desc').value   = r?.description||r?.desc||'';
+  document.getElementById('r-ing').value    = r?.ingredients||r?.ing||'';
+  document.getElementById('r-method').value = r?.method||'';
+  document.getElementById('recipe-overlay').classList.add('open');
+}
+function closeRecipeDrawer(){ document.getElementById('recipe-overlay').classList.remove('open'); }
+
+async function saveRecipe(){
+  const name = document.getElementById('r-name').value.trim();
+  if(!name){ showToast('Name is required', true); return; }
+  const payload = {
+    name,
+    origin:      document.getElementById('r-origin').value.trim()||null,
+    badge:       document.getElementById('r-badge').value.trim()||null,
+    photo:       document.getElementById('r-photo').value.trim()||null,
+    description: document.getElementById('r-desc').value.trim(),
+    ingredients: document.getElementById('r-ing').value.trim(),
+    method:      document.getElementById('r-method').value.trim(),
+  };
+  let err;
+  if(editingRecipeId){
+    ({error:err} = await db.from('recipes').update(payload).eq('id',editingRecipeId));
+  } else {
+    ({error:err} = await db.from('recipes').insert(payload));
+  }
+  if(err){ showToast('Error: '+err.message, true); return; }
+  showToast(editingRecipeId ? 'Recipe updated ✓' : 'Recipe added ✓');
+  closeRecipeDrawer();
+  loadAll();
+}
+
+async function deleteRecipe(id){
+  if(!confirm('Delete this recipe?')) return;
+  const {error} = await db.from('recipes').delete().eq('id',id);
+  if(error){ showToast('Error: '+error.message, true); return; }
+  showToast('Deleted ✓');
+  loadAll();
+}
+
+/* ══ NAV ══ */
+function showSection(name, el){
+  document.querySelectorAll('.section-page').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+  document.getElementById('sec-'+name).classList.add('on');
+  el.classList.add('on');
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(err?' err':'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closePlaceDrawer();
+    closeRecipeDrawer();
+  }
+});
+</script>
+</body>
+</html>
