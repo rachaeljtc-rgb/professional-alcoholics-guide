@@ -562,7 +562,7 @@ nav{
         <span class="filter-row-label">vibe</span>
         <button class="qf-chip" onclick="setFilter('fancy',this)" data-f="fancy">Classy</button>
         <button class="qf-chip" onclick="setFilter('stylish',this)" data-f="stylish">Stylish</button>
-        <button class="qf-chip" onclick="setFilter('social',this)" data-f="social">Loud & Social</button>
+        <button class="qf-chip" onclick="setFilter('social',this)" data-f="social">Social</button>
         <button class="qf-chip" onclick="setFilter('solo',this)" data-f="solo">Solo Drinking</button>
         <button class="qf-chip" onclick="setFilter('date',this)" data-f="date">Date Night</button>
       </div>
@@ -712,7 +712,7 @@ function toggleLike(e, id, btn){
 }
 
 /* ══════════════ GALLERY ══════════════ */
-const vibeLabels = {fancy:'classy',social:'loud & social',solo:'solo drinking',date:'date night',restaurant:'restaurant',stylish:'stylish'};
+const vibeLabels = {fancy:'classy',social:'social',solo:'solo drinking',date:'date night',restaurant:'restaurant',stylish:'stylish'};
 
 function stars(r){
   const full=Math.floor(r), half=r%1>=0.5;
