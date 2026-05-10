@@ -554,17 +554,17 @@ nav{
     <div class="filter-rows">
       <div class="filter-row">
         <span class="filter-row-label">type</span>
-        <button class="qf-chip on" onclick="setFilter('all',this)" data-group="type">All</button>
-        <button class="qf-chip" onclick="setFilter('bars',this)" data-group="type">Bars</button>
-        <button class="qf-chip" onclick="setFilter('restaurants',this)" data-group="type">Restaurants</button>
+        <button class="qf-chip on" onclick="setFilter('all',this)" data-f="all">All</button>
+        <button class="qf-chip" onclick="setFilter('bars',this)" data-f="bars">Bars</button>
+        <button class="qf-chip" onclick="setFilter('restaurants',this)" data-f="restaurants">Restaurants</button>
       </div>
       <div class="filter-row">
         <span class="filter-row-label">vibe</span>
-        <button class="qf-chip" onclick="setFilter('fancy',this)" data-group="vibe">Classy</button>
-        <button class="qf-chip" onclick="setFilter('stylish',this)" data-group="vibe">Stylish</button>
-        <button class="qf-chip" onclick="setFilter('social',this)" data-group="vibe">Loud & Social</button>
-        <button class="qf-chip" onclick="setFilter('solo',this)" data-group="vibe">Solo Drinking</button>
-        <button class="qf-chip" onclick="setFilter('date',this)" data-group="vibe">Date Night</button>
+        <button class="qf-chip" onclick="setFilter('fancy',this)" data-f="fancy">Classy</button>
+        <button class="qf-chip" onclick="setFilter('stylish',this)" data-f="stylish">Stylish</button>
+        <button class="qf-chip" onclick="setFilter('social',this)" data-f="social">Loud & Social</button>
+        <button class="qf-chip" onclick="setFilter('solo',this)" data-f="solo">Solo Drinking</button>
+        <button class="qf-chip" onclick="setFilter('date',this)" data-f="date">Date Night</button>
       </div>
     </div>
     <div class="list-meta-row">
@@ -696,6 +696,7 @@ const recipes = [
 let currentFilter = 'all';
 let currentSearch = '';
 let currentView = 'grid';
+let currentTypeFilter = 'all';
 
 /* ══════════════ LIKES ══════════════ */
 function getLiked(id){ try{ return JSON.parse(localStorage.getItem('likes')||'[]').includes(id); }catch{return false;} }
@@ -758,6 +759,7 @@ function renderGallery(){
       <div class="bar-card-body">
         <div class="bar-card-name">${p.name}</div>
         <div class="bar-card-city">${p.city||''}</div>
+        <div class="bar-card-tags">${tags.join('')}</div>
       </div>`;
     card.onclick=()=>openModal(p);
     grid.appendChild(card);
@@ -767,11 +769,29 @@ function renderGallery(){
 }
 
 function setFilter(f, btn){
-  currentFilter=f;
-  // only deactivate chips in the same row
-  const row = btn.closest('.filter-row') || btn.parentElement;
-  row.querySelectorAll('.qf-chip').forEach(c=>c.classList.remove('on'));
-  btn.classList.add('on');
+  const row = btn.closest('.filter-row');
+  const isType = ['all','bars','restaurants'].includes(f);
+
+  if(isType){
+    currentTypeFilter = f;
+    currentFilter = f;
+    row.querySelectorAll('.qf-chip').forEach(c=>c.classList.remove('on'));
+    btn.classList.add('on');
+    // clear any active vibe chip
+    document.querySelectorAll('.filter-row .qf-chip.on').forEach(c=>{
+      if(!['all','bars','restaurants'].includes(c.dataset.f)) c.classList.remove('on');
+    });
+  } else {
+    // vibe chip — toggle if already active
+    if(btn.classList.contains('on')){
+      btn.classList.remove('on');
+      currentFilter = currentTypeFilter;
+    } else {
+      row.querySelectorAll('.qf-chip').forEach(c=>c.classList.remove('on'));
+      btn.classList.add('on');
+      currentFilter = f;
+    }
+  }
   renderGallery();
 }
 
