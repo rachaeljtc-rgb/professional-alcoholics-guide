@@ -288,7 +288,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Photo</th><th>Name</th><th>Origin</th><th>Badge</th><th>Actions</th></tr>
+            <tr><th>Photo</th><th>Name</th><th>Subtitle</th><th>Source</th><th>Actions</th></tr>
           </thead>
           <tbody id="recipes-tbody"></tbody>
         </table>
@@ -382,20 +382,12 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
         <input type="text" id="r-name" placeholder="e.g. Negroni">
       </div>
       <div class="form-group">
-        <label>Origin</label>
-        <input type="text" id="r-origin" placeholder="e.g. Florence, Italy">
-      </div>
-      <div class="form-group full">
-        <label>Badge / Subtitle (e.g. "equal parts", "3 ingredients")</label>
-        <input type="text" id="r-badge" placeholder="equal parts">
+        <label>Subtitle (e.g. "the correct margarita")</label>
+        <input type="text" id="r-subtitle" placeholder="the one that shouldn't work">
       </div>
       <div class="form-group full">
         <label>Photo URL</label>
         <input type="url" id="r-photo" placeholder="https://images.unsplash.com/…">
-      </div>
-      <div class="form-group full">
-        <label>Subtitle (short tagline, e.g. "the correct margarita")</label>
-        <input type="text" id="r-subtitle" placeholder="the one that shouldn't work">
       </div>
       <div class="form-group full">
         <label>Source / Reference (e.g. Serious Eats, Bon Appétit)</label>
@@ -411,7 +403,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
       </div>
       <div class="form-group full">
         <label>Method / How to make it</label>
-        <textarea id="r-method" placeholder="Stir over ice until very cold…"></textarea>
+        <textarea id="r-method" placeholder="1. Stir over ice 2. Strain into glass…"></textarea>
       </div>
     </div>
     <div class="form-footer">
@@ -608,8 +600,8 @@ function renderRecipesTable(){
       <tr>
         <td><img class="td-photo" src="${r.photo||''}" onerror="this.style.opacity=0"></td>
         <td><div class="td-name">${r.name}</div></td>
-        <td style="font-size:0.78rem">${r.origin||''}</td>
-        <td style="font-size:0.72rem;color:var(--ink-light)">${r.badge||''}</td>
+        <td style="font-size:0.78rem">${r.subtitle||''}</td>
+        <td style="font-size:0.72rem;color:var(--ink-light)">${r.source||''}</td>
         <td>
           <div class="td-actions">
             <button class="btn btn-outline btn-sm" onclick="openRecipeDrawer(${r.id})">Edit</button>
@@ -625,14 +617,13 @@ function openRecipeDrawer(id){
   editingRecipeId = id;
   const r = id ? allRecipes.find(x=>x.id===id) : null;
   document.getElementById('recipe-drawer-title').textContent = r ? 'Edit recipe' : 'Add recipe';
-  document.getElementById('r-name').value   = r?.name||'';
-  document.getElementById('r-origin').value = r?.origin||'';
-  document.getElementById('r-badge').value  = r?.badge||'';
-  document.getElementById('r-photo').value  = r?.photo||'';
+  document.getElementById('r-name').value     = r?.name||'';
   document.getElementById('r-subtitle').value = r?.subtitle||'';
+  document.getElementById('r-photo').value    = r?.photo||'';
   document.getElementById('r-source').value   = r?.source||'';
-  document.getElementById('r-ing').value    = r?.ingredients||r?.ing||'';
-  document.getElementById('r-method').value = r?.method||'';
+  document.getElementById('r-desc').value     = r?.description||r?.desc||'';
+  document.getElementById('r-ing').value      = r?.ingredients||r?.ing||'';
+  document.getElementById('r-method').value   = r?.method||'';
   document.getElementById('recipe-overlay').classList.add('open');
 }
 function closeRecipeDrawer(){ document.getElementById('recipe-overlay').classList.remove('open'); }
@@ -642,10 +633,8 @@ async function saveRecipe(){
   if(!name){ showToast('Name is required', true); return; }
   const payload = {
     name,
-    origin:      document.getElementById('r-origin').value.trim()||null,
-    badge:       document.getElementById('r-badge').value.trim()||null,
-    photo:       document.getElementById('r-photo').value.trim()||null,
     subtitle:    document.getElementById('r-subtitle').value.trim()||null,
+    photo:       document.getElementById('r-photo').value.trim()||null,
     source:      document.getElementById('r-source').value.trim()||null,
     description: document.getElementById('r-desc').value.trim(),
     ingredients: document.getElementById('r-ing').value.trim(),
