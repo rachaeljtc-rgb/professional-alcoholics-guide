@@ -350,20 +350,22 @@ nav{
 .rc-ing-list li::before{
   content:'—';color:var(--blue-light);flex-shrink:0;font-size:0.7rem;
 }
-.rc-method-toggle{
+.rc-expand-btn{
   font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
   color:var(--navy);cursor:pointer;background:none;border:none;
   font-family:'DM Sans',sans-serif;padding:0;text-align:left;
   border-bottom:1px solid var(--border-strong);padding-bottom:1px;
-  transition:opacity 0.2s;
+  transition:opacity 0.2s;margin-top:auto;
 }
-.rc-method-toggle:hover{opacity:0.55}
-.rc-method{
-  display:none;margin-top:0.75rem;
-  padding:0.85rem;background:var(--blue-pale);
-  border-radius:6px;border-left:2px solid var(--blue-mid);
+.rc-expand-btn:hover{opacity:0.55}
+.rc-expandable{
+  display:none;margin-top:1rem;
 }
-.rc-method.open{display:block}
+.rc-expandable.open{display:block}
+.rc-method-body{
+  margin-bottom:0.75rem;
+}
+.rc-method-toggle{display:none}
 .rc-step{
   display:flex;gap:0.6rem;align-items:baseline;
   font-size:0.8rem;color:var(--ink-mid);line-height:1.6;
@@ -646,19 +648,19 @@ const places = [
 ];
 
 const recipes = [
-  {name:"Aperol Spritz",origin:"Veneto, Italy",badge:"3 ingredients",subtitle:"the italian classic",source:"Serious Eats",
+  {name:"Aperol Spritz",subtitle:"the italian classic",source:"Serious Eats",
    desc:"The drink that unlocked aperitivo culture for me. Slightly bitter, very orange, impossible to have just one.",
    ing:"3 oz prosecco · 2 oz Aperol · 1 oz soda water · orange slice",
    method:"Build in a wine glass over ice. Prosecco first, then Aperol, then soda. Stir gently. Add the orange. That's genuinely it."},
-  {name:"Negroni",origin:"Florence, Italy",badge:"equal parts",subtitle:"equal parts, perfect result",source:"Difford's Guide",
+  {name:"Negroni",subtitle:"equal parts, perfect result",source:"Difford's Guide",
    desc:"One part gin, one part Campari, one part sweet vermouth. Sounds too simple. Tastes like a decision.",
    ing:"1 oz gin · 1 oz Campari · 1 oz sweet vermouth · orange peel",
    method:"Stir over ice until very cold. Strain into a rocks glass over a large ice cube. Express the orange peel. Do not rush this."},
-  {name:"Paper Plane",origin:"Sasha Petraske, NYC",badge:"equal parts",subtitle:"the one that shouldn't work",source:"Punch Drink",
+  {name:"Paper Plane",subtitle:"the one that shouldn't work",source:"Punch Drink",
    desc:"Bourbon, Aperol, amaro, lemon — equal parts of everything. Shouldn't work. Does. I think about it a lot.",
    ing:"¾ oz bourbon · ¾ oz Aperol · ¾ oz Amaro Nonino · ¾ oz fresh lemon juice",
    method:"Shake hard with ice. Strain into a coupe. No garnish. It's perfect as written."},
-  {name:"Tommy's Margarita",origin:"Tommy's, San Francisco",badge:"the upgrade",subtitle:"the correct margarita",source:"Bon Appétit",
+  {name:"Tommy's Margarita",subtitle:"the correct margarita",source:"Bon Appétit",
    desc:"Agave syrup instead of triple sec. One change. Makes it smoother, more honest. The correct margarita.",
    ing:"2 oz blanco tequila · 1 oz fresh lime juice · ½ oz agave syrup · salt (optional)",
    method:"Shake hard. Strain over fresh ice. Salt the rim if you want. Both choices are correct."},
@@ -775,7 +777,7 @@ function renderRecipes(){
     const ing = (r.ing||r.ingredients||'');
     const ingItems = ing.split('·').map(s=>`<li>${s.trim()}</li>`).join('');
     const desc = (r.desc||r.description||'');
-    const subtitle = r.subtitle||r.badge||'';
+    const subtitle = r.subtitle||'';
     const source = r.source||'';
     div.innerHTML=`
       <img class="recipe-card-photo" src="${recipePhotos[i]||''}" alt="${r.name}" loading="lazy">
@@ -783,13 +785,16 @@ function renderRecipes(){
         <div class="rc-eyebrow">recipe</div>
         <div class="rc-name">${r.name}</div>
         ${subtitle?`<div class="rc-subtitle">${subtitle}</div>`:''}
-        <p class="rc-desc">${desc}</p>
-        <div class="rc-divider"></div>
-        <div class="rc-ing-label">Ingredients</div>
-        <ul class="rc-ing-list">${ingItems}</ul>
-        <button class="rc-method-toggle" onclick="toggleR('${id}',this)">How to make it ↓</button>
-        <div class="rc-method" id="${id}">${formatMethod(r.method||'')}</div>
-        ${source?`<div class="rc-source">source — ${source}</div>`:''}
+        <button class="rc-expand-btn" onclick="toggleR('${id}',this)">see recipe ↓</button>
+        <div class="rc-expandable" id="${id}">
+          <p class="rc-desc">${desc}</p>
+          <div class="rc-divider"></div>
+          <div class="rc-ing-label">Ingredients</div>
+          <ul class="rc-ing-list">${ingItems}</ul>
+          <div class="rc-ing-label" style="margin-top:0.75rem">How to make it</div>
+          <div class="rc-method-body">${formatMethod(r.method||'')}</div>
+          ${source?`<div class="rc-source">source — ${source}</div>`:''}
+        </div>
       </div>`;
     grid.appendChild(div);
   });
@@ -806,7 +811,7 @@ function formatMethod(text){
 function toggleR(id,el){
   const m=document.getElementById(id);
   m.classList.toggle('open');
-  el.textContent=m.classList.contains('open')?'How to make it ↑':'How to make it ↓';
+  el.textContent=m.classList.contains('open')?'hide ↑':'see recipe ↓';
 }
 
 /* ══════════════ GLOBE ══════════════ */
