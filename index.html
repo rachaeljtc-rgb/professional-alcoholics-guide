@@ -615,19 +615,19 @@ nav{
 <div class="page" id="page-about">
   <div class="about-page">
     <p class="about-label">About this guide</p>
-    <h2 class="about-title">Just a <em>curious person</em><br>with good taste.</h2>
-    <div class="about-body">
+    <h2 class="about-title" id="about-title">Just a <em>curious person</em><br>with good taste.</h2>
+    <div class="about-body" id="about-body">
       <p>I'm a biology student in San Diego. I don't have a car, I don't know what "finish" means when wine people say it, and I definitely can't tell a single malt from a blend without looking it up.</p>
       <p>But I've been to some genuinely great bars — in San Diego, London, New York — and every time I leave one I think <em>someone should write this down.</em></p>
       <p>So I did.</p>
     </div>
     <div class="about-hr"></div>
     <div class="about-pull">
-      <p>"I built this the way I approach most things: research first, expertise optional, good vibes required."</p>
+      <p id="about-pull">"I built this the way I approach most things: research first, expertise optional, good vibes required."</p>
     </div>
     <div class="about-hr"></div>
     <div class="about-body">
-      <p>No credentials. No agenda. Just a running list that gets longer every time I travel somewhere new.</p>
+      <p id="about-closing">No credentials. No agenda. Just a running list that gets longer every time I travel somewhere new.</p>
     </div>
   </div>
 </div>
@@ -995,12 +995,14 @@ const H = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
 /* ══════════════ INIT ══════════════ */
 async function init(){
   try {
-    const [pRes, rRes] = await Promise.all([
+    const [pRes, rRes, aRes] = await Promise.all([
       fetch(`${API}/places?select=*&order=id`, {headers: H}),
-      fetch(`${API}/recipes?select=*&order=id`, {headers: H})
+      fetch(`${API}/recipes?select=*&order=id`, {headers: H}),
+      fetch(`${API}/settings?select=*&key=eq.about`, {headers: H})
     ]);
     const pData = await pRes.json();
     const rData = await rRes.json();
+    const aData = await aRes.json();
     if(Array.isArray(pData) && pData.length){
       places.length = 0;
       places.push(...pData.map(p=>({...p, vibes: p.vibes||[]})));
@@ -1008,6 +1010,15 @@ async function init(){
     if(Array.isArray(rData) && rData.length){
       recipes.length = 0;
       recipes.push(...rData.map(r=>({...r, ing: r.ingredients, desc: r.description})));
+    }
+    if(Array.isArray(aData) && aData.length){
+      try {
+        const about = JSON.parse(aData[0].value);
+        if(about.title) document.getElementById('about-title').innerHTML = about.title;
+        if(about.body) document.getElementById('about-body').innerHTML = about.body.split('\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
+        if(about.pull) document.getElementById('about-pull').textContent = about.pull;
+        if(about.closing) document.getElementById('about-closing').textContent = about.closing;
+      } catch(e){}
     }
   } catch(e){ console.warn('Could not load from Supabase, using default data', e); }
   renderGallery();
