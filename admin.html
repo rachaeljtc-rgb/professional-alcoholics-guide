@@ -442,12 +442,13 @@ function unlock(){
 
 /* ══ SUPABASE ══ */
 function initSupabase(){
-  if(SUPABASE_URL==='https://ojioxxrrhvkabiccakma.supabase.co'){
-    showToast('⚠ Add your Supabase credentials at the top of admin.html', true);
-    return;
+  try {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    loadAll();
+  } catch(e){
+    showToast('Supabase error: ' + e.message, true);
+    console.error(e);
   }
-  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  loadAll();
 }
 
 async function loadAll(){
