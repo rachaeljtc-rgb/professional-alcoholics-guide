@@ -348,10 +348,11 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
       <div class="form-group full">
         <label>Vibes (select all that apply)</label>
         <div class="vibes-check">
-          <label class="vibe-opt"><input type="checkbox" value="fancy" id="v-fancy"> ✦ fancy-ish</label>
-          <label class="vibe-opt"><input type="checkbox" value="social" id="v-social"> loud & social</label>
-          <label class="vibe-opt"><input type="checkbox" value="solo" id="v-solo"> solo drinking</label>
-          <label class="vibe-opt"><input type="checkbox" value="date" id="v-date"> date night</label>
+          <label class="vibe-opt"><input type="checkbox" value="fancy" id="v-fancy"> Classy</label>
+          <label class="vibe-opt"><input type="checkbox" value="social" id="v-social"> Loud & Social</label>
+          <label class="vibe-opt"><input type="checkbox" value="solo" id="v-solo"> Solo Drinking</label>
+          <label class="vibe-opt"><input type="checkbox" value="date" id="v-date"> Date Night</label>
+          <label class="vibe-opt"><input type="checkbox" value="stylish" id="v-stylish"> Stylish</label>
         </div>
       </div>
       <div class="form-group full">
@@ -537,7 +538,7 @@ async function savePlace(){
   const name = document.getElementById('p-name').value.trim();
   const city = document.getElementById('p-city').value.trim();
   if(!name||!city){ showToast('Name and city are required', true); return; }
-  const vibes = ['fancy','social','solo','date'].filter(v=>document.getElementById('v-'+v).checked);
+  const vibes = ['fancy','social','solo','date','stylish'].filter(v=>document.getElementById('v-'+v).checked);
   const payload = {
     name, city,
     type:     document.getElementById('p-type').value,
