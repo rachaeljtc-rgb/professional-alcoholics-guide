@@ -257,7 +257,16 @@ nav{
   font-size:0.88rem;color:var(--ink-mid);line-height:1.55;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
-.bar-card-tags{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.75rem}
+.bar-card-myrating{
+  display:flex;align-items:center;gap:0.25rem;margin:0.3rem 0 0.1rem;
+}
+.mrd{font-size:0.55rem;color:var(--border-strong);letter-spacing:0.05em}
+.mrd-on{color:var(--navy)}
+.my-rating-label{
+  font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--ink-light);margin-left:0.3rem;
+}
+.bar-card-tags{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.5rem}
 .vtag{
   font-size:0.57rem;letter-spacing:0.06em;padding:0.18rem 0.58rem;
   border-radius:3px;border:1px solid var(--border-strong);color:var(--ink-light);background:transparent;
@@ -711,6 +720,13 @@ function toggleLike(e, id, btn){
   }catch{}
 }
 
+function myRatingDots(r){
+  const n = Math.round(parseFloat(r));
+  let s = '';
+  for(let i=1;i<=5;i++) s+=`<span class="mrd${i<=n?' mrd-on':''}">●</span>`;
+  return s;
+}
+
 /* ══════════════ GALLERY ══════════════ */
 const vibeLabels = {fancy:'classy',social:'social',solo:'solo drinking',date:'date night',restaurant:'restaurant',stylish:'stylish'};
 
@@ -759,6 +775,7 @@ function renderGallery(){
       <div class="bar-card-body">
         <div class="bar-card-name">${p.name}</div>
         <div class="bar-card-city">${p.city||''}</div>
+        ${p.my_rating?`<div class="bar-card-myrating">${myRatingDots(p.my_rating)}<span class="my-rating-label">my rating</span></div>`:''}
         <div class="bar-card-tags">${tags.join('')}</div>
       </div>`;
     card.onclick=()=>openModal(p);
@@ -971,7 +988,7 @@ function openModal(p){
   document.getElementById('m-eyebrow').textContent=p.type==='restaurant'?'restaurant':'bar';
   document.getElementById('m-name').textContent=p.name;
   document.getElementById('m-city').textContent=p.city;
-  document.getElementById('m-rating').innerHTML=`<span class="rating-stars">${stars(p.rating)}</span> <span class="rating-num">${p.rating}</span> <span class="rating-count">(${p.reviews} reviews on Google)</span>`;
+  document.getElementById('m-rating').innerHTML=`<span class="rating-stars">${stars(p.rating)}</span> <span class="rating-num">${p.rating}</span> <span class="rating-count">(${p.reviews} reviews on Google)</span>`+(p.my_rating?` &nbsp;·&nbsp; ${myRatingDots(p.my_rating)} <span class="my-rating-label">my rating</span>`:'');
   document.getElementById('m-vibe').textContent=p.vibe;
 
   // tags
