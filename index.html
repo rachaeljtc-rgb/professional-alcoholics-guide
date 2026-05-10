@@ -326,7 +326,7 @@ nav{
   color:var(--ink-light);line-height:1.5;
 }
 .rc-desc{
-  font-family:'EB Garamond',serif;font-style:italic;
+  font-family:'Times New Roman',Times,serif;font-style:normal;
   font-size:0.92rem;color:var(--ink-mid);line-height:1.6;
   margin-bottom:1rem;flex:1;
 }
@@ -354,12 +354,22 @@ nav{
 }
 .rc-method-toggle:hover{opacity:0.55}
 .rc-method{
-  display:none;margin-top:0.75rem;font-size:0.8rem;
-  color:var(--ink-mid);line-height:1.65;
+  display:none;margin-top:0.75rem;
   padding:0.85rem;background:var(--blue-pale);
   border-radius:6px;border-left:2px solid var(--blue-mid);
 }
 .rc-method.open{display:block}
+.rc-step{
+  display:flex;gap:0.6rem;align-items:baseline;
+  font-size:0.8rem;color:var(--ink-mid);line-height:1.6;
+  padding:0.3rem 0;border-bottom:1px solid rgba(27,43,74,0.06);
+}
+.rc-step:last-child{border-bottom:none;padding-bottom:0}
+.rc-step-num{
+  font-size:0.62rem;font-weight:500;letter-spacing:0.06em;
+  color:var(--blue-light);flex-shrink:0;min-width:18px;
+  padding-top:0.1rem;
+}
 .drinks-note{
   margin-top:2.5rem;text-align:center;
   font-family:'EB Garamond',serif;font-style:italic;
@@ -775,13 +785,22 @@ function renderRecipes(){
         <div class="rc-ing-label">Ingredients</div>
         <ul class="rc-ing-list">${ingItems}</ul>
         <button class="rc-method-toggle" onclick="toggleR('${id}',this)">How to make it ↓</button>
-        <div class="rc-method" id="${id}">${r.method}</div>
-        ${r.source?`<div class="rc-source">source — ${r.source}</div>`:''}
+        <div class="rc-method" id="${id}">${formatMethod(r.method||'')}</div>
+        ${(r.source||r.origin)?`<div class="rc-source">source — ${r.source||r.origin}</div>`:''}
       </div>`;
     grid.appendChild(div);
   });
 }
-function toggleR(id,el){
+function formatMethod(text){
+  // Split on "1." "2." etc. patterns
+  const steps = text.split(/(?=\b\d+\.\s)/).map(s=>s.trim()).filter(Boolean);
+  if(steps.length <= 1) return `<div class="rc-step"><span class="rc-step-num">—</span><span>${text}</span></div>`;
+  return steps.map(s=>{
+    const m = s.match(/^(\d+)\.\s*(.*)/s);
+    if(!m) return `<div class="rc-step"><span class="rc-step-num">—</span><span>${s}</span></div>`;
+    return `<div class="rc-step"><span class="rc-step-num">${m[1]}.</span><span>${m[2]}</span></div>`;
+  }).join('');
+}
   const m=document.getElementById(id);
   m.classList.toggle('open');
   el.textContent=m.classList.contains('open')?'How to make it ↑':'How to make it ↓';
